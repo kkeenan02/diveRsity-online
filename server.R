@@ -1,7 +1,7 @@
 # Load packages
-library("shiny")
-library("plotrix")#, lib.loc = "/home/kkeenan/depends/")
-library("diveRsity")#, lib.loc = "/home/kkeenan/depends/")
+# library("shiny")
+# library("plotrix")#, lib.loc = "/home/kkeenan/depends/")
+# library("diveRsity")#, lib.loc = "/home/kkeenan/depends/")
 #library("shinyIncubator")
 
 shinyServer(function(input, output, session) {

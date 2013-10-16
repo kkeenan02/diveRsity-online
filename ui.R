@@ -1,6 +1,6 @@
 library(shiny)
 library(diveRsity)
-
+library(plotrix)
 
 
 # Define UI
@@ -12,7 +12,7 @@ shinyUI(pageWithSidebar(
   #input
   sidebarPanel(
     
-    fileInput("file", "Input file", multiple = FALSE, accept = NULL),
+    fileInput("file", "Input file", multiple = FALSE, accept = "text"),
             
     numericInput("gp", "Genepop format", value = 3, min = 2, max = 3, step = 1),
     
