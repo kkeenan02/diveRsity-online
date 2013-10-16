@@ -12,7 +12,7 @@ shinyUI(pageWithSidebar(
   #input
   sidebarPanel(
     
-    fileInput("file", "Input file", multiple = FALSE, accept = "text"),
+    fileInput("file", "Input file", multiple = FALSE, accept = NULL),
             
     numericInput("gp", "Genepop format", value = 3, min = 2, max = 3, step = 1),
     
