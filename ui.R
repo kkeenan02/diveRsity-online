@@ -1,13 +1,14 @@
 library(shiny)
 library(diveRsity)
 library(plotrix)
-
+library(shinyIncubator)
 
 # Define UI
 shinyUI(pageWithSidebar(
   
   #app title
   headerPanel("diveRsity Online"),
+  
   
   #input
   sidebarPanel(
@@ -47,11 +48,9 @@ shinyUI(pageWithSidebar(
              "from RStudio and Inc. (2012)."),
     helpText("Any suggestion or questions should be directed to,"),
     helpText("<kkeenan02 AT qub.ac.uk>")
-  )  
-    
-    ,
+  ),
   
-  mainPanel(
+  mainPanel(progressInit(),
     tabsetPanel(
     tabPanel("Welcome",
              helpText("NOTE: This web app is designed for small to",

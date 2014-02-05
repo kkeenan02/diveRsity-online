@@ -2,7 +2,7 @@
 library(shiny)
 library(plotrix)#, lib.loc = "/home/kkeenan/depends/")
 library(diveRsity)#, lib.loc = "/home/kkeenan/depends/")
-#library("shinyIncubator")
+library(shinyIncubator)
 
 shinyServer(function(input, output, session) {
 
@@ -11,7 +11,7 @@ shinyServer(function(input, output, session) {
     if(input$goButton==0) return(NULL)
     isolate({
       infile <- input$file$datapath
-      divPart(infile = infile,
+      fastDivPart(infile = infile,
               outfile = NULL,
               gp = input$gp,
               pairwise = FALSE,
@@ -29,7 +29,7 @@ shinyServer(function(input, output, session) {
     if(input$goButton==0) return(NULL)
     isolate({
       infile <- input$file$datapath
-      divPart(infile = infile,
+      fastDivPart(infile = infile,
               outfile = NULL,
               gp = input$gp,
               pairwise = input$pairwise,
@@ -47,7 +47,7 @@ shinyServer(function(input, output, session) {
     if(input$goButton==0) return(NULL)
     isolate({
       infile <- input$file$datapath
-      divPart(infile = infile,
+      fastDivPart(infile = infile,
               outfile = NULL,
               gp = input$gp,
               pairwise = FALSE,
@@ -65,7 +65,7 @@ shinyServer(function(input, output, session) {
     if(input$goButton==0) return(NULL)
     isolate({
       infile <- input$file$datapath
-      divPart(infile = infile,
+      fastDivPart(infile = infile,
               outfile = NULL,
               gp = input$gp,
               pairwise = FALSE,
@@ -96,12 +96,21 @@ shinyServer(function(input, output, session) {
   #############################################################################
   output$divB <- renderTable({
     if(input$goButton==0) return(NULL)
-    isolate({
-      if(input$divBasic && !is.null(input$file)){
-        res <- divBout()
-        return(as.data.frame(res$mainTab))
+    withProgress(session, min=1, max=15, {
+      setProgress(message = 'Calculation in progress',
+                  detail = 'This may take a while...')
+      for (i in 1:15) {
+        setProgress(value = i)
+        Sys.sleep(0.1)
       }
-    })    
+      
+      isolate({
+        if(input$divBasic && !is.null(input$file)){
+          res <- divBout()
+          return(as.data.frame(res$mainTab))
+        }
+      })
+    })
   })
   
   #############################################################################
@@ -130,7 +139,17 @@ shinyServer(function(input, output, session) {
     isolate({
       if(!is.null(input$file)) {
         out <- stdest()
-        return(as.data.frame(out$standard))
+        return({
+          withProgress(session, min=1, max=15, {
+            setProgress(message = 'Calculation in progress',
+                        detail = 'This may take a while...')
+            for (i in 1:15) {
+              setProgress(value = i)
+              Sys.sleep(0.1)
+            }
+          })
+          as.data.frame(out$standard)
+        })
       }    
     })
   })
@@ -163,7 +182,17 @@ shinyServer(function(input, output, session) {
     isolate({
       if(!is.null(input$file)) {
         out <- stdest()
-        return(as.data.frame(out$estimate))
+        return({
+          withProgress(session, min=1, max=15, {
+            setProgress(message = 'Calculation in progress',
+                        detail = 'This may take a while...')
+            for (i in 1:15) {
+              setProgress(value = i)
+              Sys.sleep(0.1)
+            }
+          })
+          as.data.frame(out$estimate)
+        })
       }
     })
   })
@@ -188,47 +217,53 @@ shinyServer(function(input, output, session) {
   #############################################################################
   output$pw <- renderTable({
     if(input$goButton==0) return(NULL)
-    isolate({
-      out <- pwOut()
-      if(is.element("pairwise", names(out))){
-        pw_fix <- lapply(out$pairwise, function(x){
-          matrix(x, ncol = ncol(x), nrow = nrow(x))
-        })
-        for(i in 1:length(pw_fix)){
-          pw_fix[[i]][is.na(pw_fix[[i]])] <- ""
-        }
-        spltr <- matrix(rep("", (ncol(pw_fix[[1]]))+1), nrow = 1, 
-                        ncol = (ncol(pw_fix[[1]])+1))
-        rownames(spltr) <- NULL
-        rowcol <- c("",colnames(out$pairwise[[1]]))
-        dimnames(rowcol) <- NULL
-        spltr_nm <- matrix(c("Gst_est", rep("", (length(spltr)-1))), 
-                           ncol = length(spltr), nrow = 1)
-        rownames(spltr_nm) <- NULL
-        pre_pw <- rbind(rowcol[-1], pw_fix[[4]])
-        pw <- rbind(spltr_nm, cbind(rowcol, pre_pw))
-        if(!input$WC_Fst){
-          for(i in 5:6){
-            spltr_nm <- matrix(c(names(out$pairwise)[i], 
+    withProgress(session, min=1, max=15, {
+      setProgress(message = 'Calculation in progress',
+                  detail = 'This may take a while...')
+      for (i in 1:15) {
+        setProgress(value = i)
+        Sys.sleep(0.1)
+      }
+      isolate({
+        out <- pwOut()
+        if(is.element("pairwise", names(out))){
+          pw_fix <- lapply(out$pairwise, function(x){
+            matrix(round(x, 4), ncol = ncol(x), nrow = nrow(x))
+          })
+          for(i in 1:length(pw_fix)){
+            pw_fix[[i]][is.na(pw_fix[[i]])] <- ""
+          }
+          spltr <- matrix(rep("", (ncol(pw_fix[[1]]))+1), nrow = 1, 
+                          ncol = (ncol(pw_fix[[1]])+1))
+          rownames(spltr) <- NULL
+          rowcol <- c("",colnames(out$pairwise[[1]]))
+          dimnames(rowcol) <- NULL
+          spltr_nm <- matrix(c("gstEst", rep("", (length(spltr)-1))), 
+                             ncol = length(spltr), nrow = 1)
+          rownames(spltr_nm) <- NULL
+          pre_pw <- rbind(rowcol[-1], pw_fix$gstEst)
+          pw <- rbind(spltr_nm, cbind(rowcol, pre_pw))
+          if(input$WC_Fst){
+            spltr_nm <- matrix(c(names(out$pairwise)[4], 
                                  rep("", (length(spltr)-1))), 
                                ncol = length(spltr), nrow = 1)
             rownames(spltr_nm) <- NULL
-            pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
-            pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
-          }
-        } else {
-          for (i in c(5,6,7,8)){
-            spltr_nm <- matrix(c(names(out$pairwise)[i], 
-                                 rep("", (length(spltr)-1))), 
-                               ncol = length(spltr), nrow = 1)
-            rownames(spltr_nm) <- NULL
-            pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
+            pre_pw <- rbind(rowcol[-1], pw_fix$thetaWC)
             pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
           }
         }
+        for (i in c(2,3)){
+          spltr_nm <- matrix(c(names(out$pairwise)[i], 
+                               rep("", (length(spltr)-1))), 
+                             ncol = length(spltr), nrow = 1)
+          rownames(spltr_nm) <- NULL
+          pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
+          pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
+        }
+        
         dimnames(pw) <- NULL
         return(pw)
-      }
+      })
     })  
   })
   
@@ -240,40 +275,39 @@ shinyServer(function(input, output, session) {
     },
     content <- function(file) {
       out <- pwOut()
-      pw_fix <- lapply(out$pairwise, function(x){
-        matrix(x, ncol = ncol(x), nrow = nrow(x))
-      })
-      for(i in 1:length(pw_fix)){
-        pw_fix[[i]][is.na(pw_fix[[i]])] <- ""
+      if(is.element("pairwise", names(out))){
+        pw_fix <- lapply(out$pairwise, function(x){
+          matrix(round(x, 4), ncol = ncol(x), nrow = nrow(x))
+        })
+        for(i in 1:length(pw_fix)){
+          pw_fix[[i]][is.na(pw_fix[[i]])] <- ""
+        }
+        spltr <- matrix(rep("", (ncol(pw_fix[[1]]))+1), nrow = 1, 
+                        ncol = (ncol(pw_fix[[1]])+1))
+        rownames(spltr) <- NULL
+        rowcol <- c("",colnames(out$pairwise[[1]]))
+        dimnames(rowcol) <- NULL
+        spltr_nm <- matrix(c("gstEst", rep("", (length(spltr)-1))), 
+                           ncol = length(spltr), nrow = 1)
+        rownames(spltr_nm) <- NULL
+        pre_pw <- rbind(rowcol[-1], pw_fix$gstEst)
+        pw <- rbind(spltr_nm, cbind(rowcol, pre_pw))
+        if(input$WC_Fst){
+          spltr_nm <- matrix(c(names(out$pairwise)[4], 
+                               rep("", (length(spltr)-1))), 
+                             ncol = length(spltr), nrow = 1)
+          rownames(spltr_nm) <- NULL
+          pre_pw <- rbind(rowcol[-1], pw_fix$thetaWC)
+          pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
+        }
       }
-      spltr <- matrix(rep("", (ncol(pw_fix[[1]]))+1), nrow = 1, 
-                      ncol = (ncol(pw_fix[[1]])+1))
-      rownames(spltr) <- NULL
-      rowcol <- c("",colnames(out$pairwise[[1]]))
-      dimnames(rowcol) <- NULL
-      spltr_nm <- matrix(c("Gst_est", rep("", (length(spltr)-1))), 
-                         ncol = length(spltr), nrow = 1)
-      rownames(spltr_nm) <- NULL
-      pre_pw <- rbind(rowcol[-1], pw_fix[[4]])
-      pw <- rbind(spltr_nm, cbind(rowcol, pre_pw))
-      if(!input$WC_Fst){
-        for(i in 5:6){
-          spltr_nm <- matrix(c(names(out$pairwise)[i], 
-                               rep("", (length(spltr)-1))), 
-                             ncol = length(spltr), nrow = 1)
-          rownames(spltr_nm) <- NULL
-          pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
-          pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
-        }
-      } else {
-        for (i in c(5,6,7,8)){
-          spltr_nm <- matrix(c(names(out$pairwise)[i], 
-                               rep("", (length(spltr)-1))), 
-                             ncol = length(spltr), nrow = 1)
-          rownames(spltr_nm) <- NULL
-          pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
-          pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
-        }
+      for (i in c(2,3)){
+        spltr_nm <- matrix(c(names(out$pairwise)[i], 
+                             rep("", (length(spltr)-1))), 
+                           ncol = length(spltr), nrow = 1)
+        rownames(spltr_nm) <- NULL
+        pre_pw <- rbind(rowcol[-1], pw_fix[[i]])
+        pw <- rbind(pw, spltr, spltr_nm, cbind(rowcol, pre_pw))
       }
       dimnames(pw) <- NULL  
       write.table(pw, file, append = FALSE, quote = FALSE,
@@ -286,38 +320,46 @@ shinyServer(function(input, output, session) {
   #############################################################################
   output$bs_loc <- renderTable({
     if(input$goButton==0) return(NULL)
-    isolate({
-      if(input$bs_locus == TRUE){
-        out <- lbsOut()
-        splt <- c("--","--","--","--")
-        rownames(splt) <-  NULL
-        splt_nm <- c("Gst_est","","","")
-        rownames(splt_nm) <- NULL
-        bs_loc <- rbind(splt_nm, cbind(rownames(out$bs_locus$Gst_est),
-                                       out$bs_locus$Gst_est))
-        if(!input$WC_Fst){
-          for (i in 5:6){
-            splt_nm <- c(names(out$bs_locus)[i],"","","")
-            adder <- cbind(rownames(out$bs_locus[[i]]),
-                           out$bs_locus[[i]])
-            suppressWarnings(bs_loc <- rbind(bs_loc, splt, splt_nm, adder))
-          }
-        } else {
-          for (i in c(5,6,7,8)){
-            splt_nm <- c(names(out$bs_locus)[i],"","","")
-            adder <- cbind(rownames(out$bs_locus[[i]]),
-                           out$bs_locus[[i]])
-            suppressWarnings(bs_loc <- rbind(bs_loc, splt, splt_nm, adder))
-          }
-        }
-        rownames(bs_loc) <- NULL
-        colnames(bs_loc) <- c("Loci", "Actual", "Lower", "Upper")
-        return(bs_loc)
+    withProgress(session, {
+      setProgress(message = 'Calculation in progress',
+                  detail = 'This may take a while...')
+      for (i in 1:15) {
+        setProgress(value = i)
+        Sys.sleep(0.5)
       }
+      isolate({
+        if(input$bs_locus == TRUE){
+          out <- lbsOut()
+          splt <- c("--","--","--","--")
+          rownames(splt) <-  NULL
+          splt_nm <- c("Gst_est","","","")
+          rownames(splt_nm) <- NULL
+          bs_loc <- rbind(splt_nm, cbind(rownames(out$bs_locus$Gst_est),
+                                         out$bs_locus$Gst_est))
+          if(!input$WC_Fst){
+            for (i in 5:6){
+              splt_nm <- c(names(out$bs_locus)[i],"","","")
+              adder <- cbind(rownames(out$bs_locus[[i]]),
+                             out$bs_locus[[i]])
+              suppressWarnings(bs_loc <- rbind(bs_loc, splt, splt_nm, adder))
+            }
+          } else {
+            for (i in c(5,6,7,8)){
+              splt_nm <- c(names(out$bs_locus)[i],"","","")
+              adder <- cbind(rownames(out$bs_locus[[i]]),
+                             out$bs_locus[[i]])
+              suppressWarnings(bs_loc <- rbind(bs_loc, splt, splt_nm, adder))
+            }
+          }
+          rownames(bs_loc) <- NULL
+          colnames(bs_loc) <- c("Loci", "Actual", "Lower", "Upper")
+          return(bs_loc)
+        }
+      })
     })
   })
   
-  #Download bs _pw data
+  #Download bs_pw data
   output$dllcbs <- downloadHandler(
     filename <- function() {
       paste("Locus_bootstrap_", Sys.Date(), "_[diveRsity-online].txt", sep = "")
@@ -359,32 +401,38 @@ shinyServer(function(input, output, session) {
   ############################################################################  
   output$pw_bs <- renderTable({
     if(input$goButton==0) return(NULL)
-    isolate({
-      if(input$bs_pairwise == TRUE){
-        out <- pwbsOut()
-        splt <- c("--","--","--","--")
-        splt_nm <- c("Gst_est", "","", "")
-        pw <- rbind(splt_nm, cbind(rownames(out$bs_pairwise$Gst_est),
-                                   out$bs_pairwise$Gst_est))
-        if(!input$WC_Fst){
-          for(i in 5:6){
-            splt_nm <- c(names(out$bs_pairwise)[i], "", "", "")
-            adder <- cbind(rownames(out$bs_pairwise[[i]]),
-                           out$bs_pairwise[[i]])
-            suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))                                               
-          }
-        } else {
-          for(i in c(5,6,7,8)){
-            splt_nm <- c(names(out$bs_pairwise)[i], "", "", "")
-            adder <- cbind(rownames(out$bs_pairwise[[i]]),
-                           out$bs_pairwise[[i]])
+    withProgress(session, {
+      setProgress(message = 'Calculation in progress',
+                  detail = 'This may take a while...')
+      for (i in 1:50) {
+        setProgress(value = i)
+        Sys.sleep(0.5)
+      }
+      isolate({
+        if(input$bs_pairwise == TRUE){
+          out <- pwbsOut()
+          splt <- c("--","--","--","--","--","--","--","--")
+          splt_nm <- c("gstEst", "","", "", "", "", "", "")
+          pw <- rbind(splt_nm, cbind(rownames(out$bs_pairwise$gstEst),
+                                     round(out$bs_pairwise$gstEst, 4)))
+          if(input$WC_Fst){
+            splt_nm <- c(names(out$bs_pairwise)[4], "", "", "", "", "", "", "")
+            adder <- cbind(rownames(out$bs_pairwise[[4]]),
+                           round(out$bs_pairwise[[4]], 4))
             suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))
           }
+          for(i in c(2,3)){
+            splt_nm <- c(names(out$bs_pairwise)[i], "", "", "", "", "", "", "")
+            adder <- cbind(rownames(out$bs_pairwise[[i]]),
+                           round(out$bs_pairwise[[i]], 4))
+            suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))
+          }
+          rownames(pw) <- NULL
+          colnames(pw) <- c("POPS", "Actual", "Mean", "BC_Mean", "Lower", "Upper",
+                            "BC_Lower", "BC_Upper")
+          return(pw)    
         }
-        rownames(pw) <- NULL
-        colnames(pw) <- c("POPS", "Actual", "Lower", "Upper")
-        return(pw)    
-      }
+      })
     })
   })
   
@@ -397,31 +445,29 @@ shinyServer(function(input, output, session) {
     content <- function(file) {
       if(input$bs_pairwise == TRUE){
         out <- pwbsOut()
-        splt <- c("--","--","--","--")
-        splt_nm <- c("Gst_est", "","", "")
-        pw <- rbind(splt_nm, cbind(rownames(out$bs_pairwise$Gst_est),
-                                   out$bs_pairwise$Gst_est))
-        if(!input$WC_Fst){
-          for(i in 5:6){
-            splt_nm <- c(names(out$bs_pairwise)[i], "", "", "")
-            adder <- cbind(rownames(out$bs_pairwise[[i]]),
-                           out$bs_pairwise[[i]])
-            suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))                                               
-          }
-        } else {
-          for(i in c(5,6,7,8)){
-            splt_nm <- c(names(out$bs_pairwise)[i], "", "", "")
-            adder <- cbind(rownames(out$bs_pairwise[[i]]),
-                           out$bs_pairwise[[i]])
-            suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))
-          }
+        splt <- c("--","--","--","--","--","--","--","--")
+        splt_nm <- c("gstEst", "","", "", "", "", "", "")
+        pw <- rbind(splt_nm, cbind(rownames(out$bs_pairwise$gstEst),
+                                   round(out$bs_pairwise$gstEst, 4)))
+        if(input$WC_Fst){
+          splt_nm <- c(names(out$bs_pairwise)[4], "", "", "", "", "", "", "")
+          adder <- cbind(rownames(out$bs_pairwise[[4]]),
+                         round(out$bs_pairwise[[4]], 4))
+          suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))
+        }
+        for(i in c(2,3)){
+          splt_nm <- c(names(out$bs_pairwise)[i], "", "", "", "", "", "", "")
+          adder <- cbind(rownames(out$bs_pairwise[[i]]),
+                         round(out$bs_pairwise[[i]], 4))
+          suppressWarnings(pw <- rbind(pw, splt, splt_nm, adder))
         }
         rownames(pw) <- NULL
-        colnames(pw) <- c("POPS", "Actual", "Lower", "Upper")    
+        colnames(pw) <- c("POPS", "Actual", "Mean", "BC_Mean", "Lower", "Upper",
+                          "BC_Lower", "BC_Upper") 
       }
       
       write.table(pw, file, append = FALSE, quote = FALSE,
-                  sep = "\t", eol = "\r\n", row.names = FALSE)
+                  sep = "\t", eol = "\n", row.names = FALSE)
     }
   )
   
@@ -432,7 +478,7 @@ shinyServer(function(input, output, session) {
       if(input$corplot == TRUE){
         infile <- input$file$datapath
         x <- readGenepop(infile, input$gp, FALSE)
-        y <- divPart(infile = infile,
+        y <- fastDivPart(infile = infile,
                      outfile = NULL,
                      gp = input$gp,
                      pairwise = FALSE,
@@ -513,7 +559,7 @@ shinyServer(function(input, output, session) {
           infile <- input$file$datapath
         }
         x <- readGenepop(infile, input$gp, FALSE)
-        y <- divPart(infile = infile,
+        y <- fastDivPart(infile = infile,
                      outfile = NULL,
                      gp = input$gp,
                      pairwise = FALSE,
@@ -585,6 +631,4 @@ shinyServer(function(input, output, session) {
       }
     }
   )
-  
-  
 })
