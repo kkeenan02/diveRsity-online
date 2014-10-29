@@ -27,6 +27,14 @@ shinyUI(pageWithSidebar(
     
     checkboxInput("divBasic", 
                   "Calculate basic stats (e.g. HWE, allelic richness)", FALSE),
+    conditionalPanel(
+      condition = "input.divBasic == TRUE",
+      uiOutput("hwe")
+    ),
+    conditionalPanel(
+      condition = "input.hwe=='Y'",
+      uiOutput("mcrep")
+    ),
     
     numericInput("bootstraps", "Number of Bootstraps", value = 0, min = 0, 
                  max = 1000, step = 10),
@@ -51,7 +59,7 @@ shinyUI(pageWithSidebar(
   ),
   
   mainPanel(progressInit(),
-    tabsetPanel(
+    tabsetPanel(id = "tabs",
     tabPanel("Welcome",
              helpText("NOTE: This web app is designed for small to",
                       " medium data sets only (e.g.< 15 pops x 50 loci).",

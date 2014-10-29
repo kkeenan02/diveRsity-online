@@ -5,6 +5,36 @@ library(diveRsity)#, lib.loc = "/home/kkeenan/depends/")
 library(shinyIncubator)
 
 shinyServer(function(input, output, session) {
+  
+  output$hwe <- renderUI({
+    if(is.null(input$file)){
+      return(NULL)
+    }
+    if(input$divBasic){
+      radioButtons("hwe", h5("Test HWE using exact tests?"),
+                   choices = c("Y", "N"),
+                   selected = "N",
+                   inline = TRUE)  
+    } else{
+      return(NULL)
+    }
+  })
+  
+  output$mcrep <- renderUI({
+    if(is.null(input$file)){
+      return(NULL)
+    }
+    if(is.null(input$hwe)){
+      return(NULL)
+    } else if(input$hwe == "Y"){
+      numericInput("mcrep", h5("Number of Monte Carlo replicates for HWE tests?"),
+                   value = 2000L,
+                   min = 0L, max = 10000L, 
+                   step = 100L)
+    } else{
+      return(NULL)
+    }
+  })
 
   # calculate std and est stats
   stdest <- reactive ({
