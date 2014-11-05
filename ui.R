@@ -70,8 +70,7 @@ shinyUI(pageWithSidebar(
                       "bootstrapping facilities."),
              helpText(""),
              
-             a(href = "http://goo.gl/ahGTo", 
-               "Click here to download the help document"),
+             a(href = "http://cran.r-project.org/web/packages/diveRsity/vignettes/diveRsity.pdf", "Click here to download the help document"),
              
              helpText(""),
              helpText("For more information about the diveRsity package please",
